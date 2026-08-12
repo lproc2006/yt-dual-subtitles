@@ -63,7 +63,8 @@ def small_promo() -> Image.Image:
     draw.text((158, 128), "自动翻译 · 双语同步", font=font(18), fill=(218, 231, 255))
     rounded_badge(draw, (158, 178, 396, 224), "首次处理约 1–3 分钟", 16)
     draw.text((158, 239), "非官方工具", font=font(13), fill=(185, 205, 238))
-    return image
+    # Chrome/Edge promotional tiles must be 24-bit PNGs without an alpha channel.
+    return image.convert("RGB")
 
 
 def marquee() -> Image.Image:
@@ -76,7 +77,8 @@ def marquee() -> Image.Image:
     draw.text((435, 260), "双语同步显示 · 样式调整 · Markdown 导出", font=font(28), fill=(195, 218, 255))
     rounded_badge(draw, (435, 335, 865, 410), "首次处理约 1–3 分钟", 27)
     draw.text((435, 446), "非官方工具，与 YouTube、Google 或 Microsoft 无隶属关系", font=font(19), fill=(184, 205, 237))
-    return image
+    # Chrome/Edge promotional tiles must be 24-bit PNGs without an alpha channel.
+    return image.convert("RGB")
 
 
 def validate(path: Path, expected: tuple[int, int]) -> None:
