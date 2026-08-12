@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "双语字幕助手 for YouTube",
+  "version": "2.3.0",
+  "description": "YouTube 双语字幕：自动提取并翻译中英文字幕，支持样式调整与 Markdown 导出；首次处理视频通常需等待 1–3 分钟。",
+  "homepage_url": "https://lproc2006.github.io/yt-dual-subtitles/",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://translate.googleapis.com/*",
+    "http://127.0.0.1:8765/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content/timeline.js", "content/renderer.js", "content/content.js"],
+      "css": ["content/overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["content/main-world.js"],
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "双语字幕助手 for YouTube",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

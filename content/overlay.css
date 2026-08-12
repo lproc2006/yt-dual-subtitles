@@ -1,0 +1,93 @@
+/* YouTube 双语字幕 overlay（专业字幕样式，支持影院/简洁预设） */
+#yt-ds-overlay {
+  --font-scale: 1;
+  --sub-bg: none;
+  position: absolute;
+  bottom: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 88%;
+  max-width: 880px;
+  pointer-events: none;
+  text-align: center;
+}
+
+/* 原文行（视觉权重低，略小） */
+#yt-ds-overlay .yt-ds-source {
+  font-size: calc(17px * var(--font-scale));
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.92);
+  border-radius: 3px;
+  padding: 1px 4px;
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.85), 1px -1px 0 rgba(0, 0, 0, 0.85),
+    -1px 1px 0 rgba(0, 0, 0, 0.85), 1px 1px 0 rgba(0, 0, 0, 0.85),
+    0 2px 6px rgba(0, 0, 0, 0.75);
+  white-space: pre-line;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* 译文主字幕（更大更醒目） */
+#yt-ds-overlay .yt-ds-translation {
+  font-size: calc(25px * var(--font-scale));
+  font-weight: 500;
+  line-height: 1.5;
+  color: #fff;
+  border-radius: 3px;
+  padding: 2px 6px;
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.9), 1px -1px 0 rgba(0, 0, 0, 0.9),
+    -1px 1px 0 rgba(0, 0, 0, 0.9), 1px 1px 0 rgba(0, 0, 0, 0.9),
+    0 2px 6px rgba(0, 0, 0, 0.8);
+  white-space: pre-line;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* 背景样式：translucent=半透明黑底 | solid=实心黑底 | none=无底描边 */
+#yt-ds-overlay[data-style] .yt-ds-source,
+#yt-ds-overlay[data-style] .yt-ds-translation {
+  background: transparent;
+}
+#yt-ds-overlay[data-style="cinema"][data-bg="translucent"] .yt-ds-source,
+#yt-ds-overlay[data-style="cinema"][data-bg="translucent"] .yt-ds-translation {
+  background: rgba(8, 8, 8, 0.6);
+}
+#yt-ds-overlay[data-style="cinema"][data-bg="solid"] .yt-ds-source,
+#yt-ds-overlay[data-style="cinema"][data-bg="solid"] .yt-ds-translation {
+  background: rgba(0, 0, 0, 0.88);
+}
+#yt-ds-overlay[data-style="minimal"] .yt-ds-source,
+#yt-ds-overlay[data-style="minimal"] .yt-ds-translation {
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.75), 1px -1px 0 rgba(0, 0, 0, 0.75),
+    -1px 1px 0 rgba(0, 0, 0, 0.75), 1px 1px 0 rgba(0, 0, 0, 0.75);
+}
+#yt-ds-overlay[data-style="minimal"] .yt-ds-translation {
+  font-weight: 400;
+}
+
+#yt-ds-overlay .yt-ds-translation[data-pending="true"] {
+  opacity: 0.78;
+}
+
+#yt-ds-overlay [hidden] {
+  display: none !important;
+}
+
+/* 状态提示 */
+#yt-ds-overlay .yt-ds-status {
+  font-size: 13px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 3px 12px;
+  margin-top: 6px;
+  pointer-events: none;
+}

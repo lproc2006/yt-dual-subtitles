@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=1280"><title>商店功能图</title><link rel="stylesheet" href="demo.css"></head>
+<body>
+  <section class="shot shot-dual browser">
+    <div class="tabs"><div class="tab">示例视频｜双语字幕助手</div></div>
+    <div class="bar"><span class="navdot"></span><span class="navdot"></span><div class="address">youtube.com/watch?v=example</div><div class="extension-chip"><img src="../../icons/icon128.png" alt="">双语字幕助手</div></div>
+    <div class="page"><span class="demo-label">功能展示</span><div class="video-column"><div class="video"><div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="speaker"></div><div class="captions"><div class="source">The best way to understand a new idea is to see it in context.</div><div class="translated">理解新概念最好的方式，是把它放到具体语境中。</div></div><div class="controls"><span class="play"></span><span>02:18</span><div class="timeline"></div><span>12:40</span></div></div><div class="video-title">示例视频：双语字幕同步显示</div><div class="meta">原文与译文随视频时间轴同步</div></div><aside class="side-card"><h2>边看边读双语字幕</h2><div class="feature"><span class="check">✓</span><span>自动识别中英文字幕</span></div><div class="feature"><span class="check">✓</span><span>原文与译文同步显示</span></div><div class="feature"><span class="check">✓</span><span>支持字号、背景和影院模式</span></div><div class="wait-pill"><strong>首次处理约 1–3 分钟</strong><br>一次性提取并翻译整段字幕，完成后优先复用缓存。</div></aside></div>
+  </section>
+
+  <section class="shot shot-loading browser">
+    <div class="tabs"><div class="tab">双语字幕助手｜首次处理提示</div></div>
+    <div class="bar"><span class="navdot"></span><span class="navdot"></span><div class="address">youtube.com/watch?v=example</div><div class="extension-chip"><img src="../../icons/icon128.png" alt="">双语字幕助手</div></div>
+    <div class="workspace"><span class="demo-label">功能展示</span><div class="workspace-copy"><div class="eyebrow">清晰的等待预期</div><h1>整段字幕一次提取、一次翻译</h1><p>首次打开视频时，字幕处理通常需要 1–3 分钟。扩展会持续显示提取或翻译进度，完成后再次打开同一视频通常更快。</p><div class="steps"><div class="step">① 提取字幕</div><div class="step">② 批量翻译</div><div class="step">③ 本地缓存</div></div></div><div class="popup"><h2>双语字幕助手</h2><div class="prow"><span>启用字幕翻译</span><span class="toggle"></span></div><div class="prow"><span>翻译方向</span><span class="select">自动识别（推荐）</span></div><div class="prow"><span>显示模式</span><span class="select">原文 + 译文对照</span></div><div class="section">字幕样式</div><div class="prow"><span>预设</span><span class="select">影院模式</span></div><div class="prow"><span>字号 100%</span><span>━━●━━━━</span></div><div class="processing"><strong>首次处理请耐心等待 1–3 分钟</strong>一次性提取并翻译整段字幕；完成后优先复用缓存。</div><div class="status">正在一次性翻译全部字幕 186/644（Google 在线）</div><div class="exportbox"><strong>📄 导出字幕（Markdown）</strong><div class="radios">◉ 中英对照　○ 仅译文　○ 仅原文</div><div class="pbutton">导出为 .md 文件</div><div class="pbutton secondary">重新翻译当前视频</div></div></div></div>
+  </section>
+
+  <section class="shot shot-export browser">
+    <div class="tabs"><div class="tab">双语字幕助手｜样式与导出</div></div>
+    <div class="bar"><span class="navdot"></span><span class="navdot"></span><div class="address">扩展功能：字幕样式与 Markdown 导出</div><div class="extension-chip"><img src="../../icons/icon128.png" alt="">双语字幕助手</div></div>
+    <div class="export-page"><span class="demo-label">功能展示</span><div class="popup"><h2>双语字幕助手</h2><div class="prow"><span>显示模式</span><span class="select">原文 + 译文对照</span></div><div class="section">字幕样式</div><div class="prow"><span>预设</span><span class="select">影院模式</span></div><div class="prow"><span>字号 120%</span><span>━━━━●━━</span></div><div class="prow"><span>背景</span><span class="select">半透明黑底</span></div><div class="processing"><strong>首次处理请耐心等待 1–3 分钟</strong>整段字幕处理完成后即可导出。</div><div class="status">✓ 已就绪（644 条 · 本地缓存）</div><div class="exportbox"><strong>📄 导出字幕（Markdown）</strong><div class="radios">◉ 中英对照　○ 仅译文　○ 仅原文</div><div class="pbutton">导出为 .md 文件</div><div class="pbutton secondary">重新翻译当前视频</div><div class="pbutton secondary">清除本地翻译缓存</div></div></div><div class="document"><h1>示例视频字幕</h1><div class="quote">来源：YouTube 视频页面<br>语言：英语 → 中文<br>格式：中英对照 Markdown</div><h3>01　Understanding ideas in context</h3><p>The best way to understand a new idea is to see it in context.</p><p class="translation">理解新概念最好的方式，是把它放到具体语境中。</p><h3>02　Build a clear mental model</h3><p>Start with the main structure, then connect the details.</p><p class="translation">先建立整体结构，再把细节连接起来。</p></div></div>
+  </section>
+  <script>document.body.dataset.shot = new URLSearchParams(location.search).get("shot") || "dual";</script>
+</body>
+</html>

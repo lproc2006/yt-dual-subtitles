@@ -1,0 +1,8 @@
+.DS_Store
+release/*.zip
+server/cache/
+server/cache-v3/
+server/__pycache__/
+server/*.tmp
+*.log
+*.part
