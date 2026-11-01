@@ -1,0 +1,11 @@
+{
+  "feature": "captions",
+  "reason": "YouTube did not return a playable caption track",
+  "playability": {
+    "status": "LOGIN_REQUIRED",
+    "reason": "Sign in to confirm you’re not a bot"
+  },
+  "trackCount": 0,
+  "overlayStatus": "正在读取 YouTube 字幕…",
+  "href": "https://www.youtube.com/watch?v=v4F1gFy-hqg"
+}

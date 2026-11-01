@@ -1,0 +1,9 @@
+{
+  "feature": "whisper",
+  "reason": "local caption service is not answering /health",
+  "health": {
+    "up": false,
+    "error": "fetch failed"
+  },
+  "start": "bun server/server.mjs"
+}
