@@ -1,0 +1,9 @@
+{
+  "lang": "zh",
+  "source": "youtube-manual",
+  "segments": [
+    { "text": "这是一条用于夹具的中文字幕。", "start": 0, "end": 2.8 },
+    { "text": "第二句保持时间轴连续并且足够长。", "start": 3, "end": 6.2 },
+    { "text": "第三句确认断行后仍然有效。", "start": 6.4, "end": 9 }
+  ]
+}

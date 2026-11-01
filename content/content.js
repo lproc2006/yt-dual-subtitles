@@ -12,7 +12,7 @@
 
   const CACHE_VERSION = 3;
   const LOCAL_SERVICE = "http://127.0.0.1:8765";
-  const LOCAL_TOKEN = "99a56f089a38ced72c3d954927ce6601586c571e6f1e7553";
+  const LOCAL_SERVICE_TOKEN_KEY = "ytdsLocalServiceToken";
   const MAX_BATCH_CHARS = 1100;
   const TRANSLATION_CONCURRENCY = 2;
   const GOOGLE_RETRIES = 2;
@@ -45,6 +45,7 @@
   let statusHideTimer = 0;
   let sourceRetryTimer = 0;
   let sourceRetryAttempt = 0;
+  let localServiceToken = "";
 
   function snapshot() {
     return {
@@ -382,8 +383,87 @@
   }
 
   // ---------- 本机字幕缓存与语音识别 ----------
-  function localHeaders() {
-    return { "X-YTDS-Token": LOCAL_TOKEN };
+  function pairWithLocalService() {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: "yt-ds-pair" }, (response) => {
+        const runtimeError = chrome.runtime.lastError;
+        if (runtimeError) {
+          reject(new Error(runtimeError.message));
+          return;
+        }
+        resolve(response || {});
+      });
+    });
+  }
+
+  async function ensureLocalServiceToken(signal, force = false) {
+    if (signal?.aborted) throw abortError();
+    if (!force && localServiceToken) return localServiceToken;
+    if (!force) {
+      try {
+        const stored = await chrome.storage.local.get(LOCAL_SERVICE_TOKEN_KEY);
+        const saved = String(stored?.[LOCAL_SERVICE_TOKEN_KEY] || "");
+        if (/^[0-9a-f]{32,}$/i.test(saved)) {
+          localServiceToken = saved;
+          return saved;
+        }
+      } catch {
+        // 存储不可用时改为向本机服务重新配对。
+      }
+    }
+    let paired;
+    try {
+      paired = await pairWithLocalService();
+    } catch (error) {
+      if (error.name === "AbortError") throw error;
+      const unavailable = new Error("本机字幕服务未启动或连接失败");
+      unavailable.code = "LOCAL_SERVICE_UNAVAILABLE";
+      throw unavailable;
+    }
+    const token = String(paired?.token || "");
+    if (!paired?.ok || !/^[0-9a-f]{32,}$/i.test(token)) {
+      const unavailable = new Error("本机字幕服务未启动或连接失败");
+      unavailable.code = "LOCAL_SERVICE_UNAVAILABLE";
+      throw unavailable;
+    }
+    localServiceToken = token;
+    try {
+      await chrome.storage.local.set({ [LOCAL_SERVICE_TOKEN_KEY]: token });
+    } catch {
+      // 本次页面仍使用内存中的口令；下次打开会重新配对。
+    }
+    return token;
+  }
+
+  async function fetchLocal(url, signal) {
+    const send = async (force) => {
+      const token = await ensureLocalServiceToken(signal, force);
+      return fetch(url, {
+        headers: { "X-YTDS-Token": token },
+        signal,
+        cache: "no-store",
+      });
+    };
+    let response;
+    try {
+      response = await send(false);
+    } catch (error) {
+      if (error.name === "AbortError" || error.code === "LOCAL_SERVICE_UNAVAILABLE") throw error;
+      const unavailable = new Error("本机字幕服务未启动或连接失败");
+      unavailable.code = "LOCAL_SERVICE_UNAVAILABLE";
+      throw unavailable;
+    }
+    if (response.status !== 401) return response;
+    localServiceToken = "";
+    try { await chrome.storage.local.remove(LOCAL_SERVICE_TOKEN_KEY); } catch { /* 重新配对 */ }
+    try {
+      return await send(true);
+    } catch (error) {
+      if (error.name === "AbortError" || error.code === "LOCAL_SERVICE_UNAVAILABLE") throw error;
+      const unavailable = new Error("本机字幕服务未启动或连接失败");
+      unavailable.code = "LOCAL_SERVICE_UNAVAILABLE";
+      throw unavailable;
+    }
   }
 
   async function fetchLocalSource(videoId, sourceLanguage, cacheOnly, signal) {
@@ -392,18 +472,7 @@
       lang: sourceLanguage || "auto",
       cacheOnly: cacheOnly ? "1" : "0",
     });
-    let response;
-    try {
-      response = await fetch(`${LOCAL_SERVICE}/captions?${query}`, {
-        headers: localHeaders(),
-        signal,
-      });
-    } catch (error) {
-      if (error.name === "AbortError") throw error;
-      const unavailable = new Error("本机字幕服务未启动或连接失败");
-      unavailable.code = "LOCAL_SERVICE_UNAVAILABLE";
-      throw unavailable;
-    }
+    const response = await fetchLocal(`${LOCAL_SERVICE}/captions?${query}`, signal);
     if (response.status === 404 && cacheOnly) return null;
     const data = await response.json().catch(() => null);
     if (!response.ok || !data?.ok || !data.segments?.length) {
@@ -418,10 +487,7 @@
   async function pollLocalStatus(videoId, job, signal) {
     while (!signal.aborted && job.isActive()) {
       try {
-        const response = await fetch(`${LOCAL_SERVICE}/status?videoId=${videoId}`, {
-          headers: localHeaders(),
-          signal,
-        });
+        const response = await fetchLocal(`${LOCAL_SERVICE}/status?videoId=${videoId}`, signal);
         const data = await response.json();
         if (data?.message) setStatus(data.message, "source");
         if (["complete", "error"].includes(data?.stage)) return;

@@ -5,7 +5,7 @@ This directory is the maintained source for verifying the user-facing behavior o
 ## Baseline preconditions
 
 - Launch with `node .cursor/skills/verify-yt-dual-subtitles/bin/verify-ytds.mjs launch` and require the `ready extension=` line.
-- Run `node .cursor/skills/verify-yt-dual-subtitles/bin/verify-ytds.mjs doctor` and require `worthDriving: true`, manifest `2.3.0`, and the disposable profile `/tmp/ytds-verify/profile`.
+- Run `node .cursor/skills/verify-yt-dual-subtitles/bin/verify-ytds.mjs doctor` and require `worthDriving: true`, Manifest V3 with the version read from `manifest.json`, and the disposable profile `/tmp/ytds-verify/profile`.
 - The profile starts empty. There is no Google account and no translation cache.
 - Default watch URL is `https://www.youtube.com/watch?v=v4F1gFy-hqg` unless `YTDS_WATCH_URL` is set.
 - Never drive an instance that was not started by this verification run. Never use `/usr/local/bin/google-chrome` or `/home/ubuntu/.config/google-chrome`.
@@ -17,7 +17,7 @@ This directory is the maintained source for verifying the user-facing behavior o
 - Drive the popup through `popup-set` and `popup-click`, and the watch page through `open-watch`.
 - Prefer the ids and accessible names in each feature file over coordinates.
 - Treat every command as literal. Keep quoted UI strings unchanged.
-- Restore a fresh profile with cleanup plus launch after a run that changes settings or cache. Do not remove proof artifacts during cleanup.
+- Restore a fresh profile with cleanup plus launch after a run that changes settings or cache. Cleanup leaves local proof artifacts on disk. Those files are gitignored and are not required in the checkout.
 
 ## Proof and skip reporting
 

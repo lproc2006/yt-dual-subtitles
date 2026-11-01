@@ -43,12 +43,43 @@ function manifestInfo() {
   return manifest;
 }
 
-function tokenMatch() {
-  const content = fs.readFileSync(path.join(repoRoot, "content", "content.js"), "utf8");
+export function manifestIsDriveable(manifest) {
+  return Boolean(
+    manifest
+    && manifest.manifest_version === 3
+    && manifest.name === "双语字幕助手 for YouTube"
+    && typeof manifest.version === "string"
+    && manifest.version.trim().length > 0
+  );
+}
+
+export function tokenMatch() {
+  const shippedPaths = ["content/content.js", "content/service-worker.js", "content/main-world.js", "popup/popup.js"];
+  const shipped = shippedPaths.map((relative) => fs.readFileSync(path.join(repoRoot, relative), "utf8")).join("\n");
   const server = fs.readFileSync(path.join(repoRoot, "server", "server.mjs"), "utf8");
-  const contentToken = content.match(/const LOCAL_TOKEN = "([0-9a-f]+)"/)?.[1] || "";
-  const serverToken = server.match(/const ACCESS_TOKEN = "([0-9a-f]+)"/)?.[1] || "";
-  return Boolean(contentToken) && contentToken === serverToken;
+  const fixedLiteral = /(?:LOCAL_TOKEN|ACCESS_TOKEN)\s*=\s*["'][0-9a-fA-F]{16,}["']/;
+  const fixedHeader = /X-YTDS-Token["']?\s*[:=]\s*["'][0-9a-fA-F]{16,}["']/;
+  if (fixedLiteral.test(shipped) || fixedLiteral.test(server) || fixedHeader.test(shipped) || fixedHeader.test(server)) {
+    return false;
+  }
+  const content = fs.readFileSync(path.join(repoRoot, "content", "content.js"), "utf8");
+  const worker = fs.readFileSync(path.join(repoRoot, "content", "service-worker.js"), "utf8");
+  const contentOk = content.includes("ytdsLocalServiceToken")
+    && content.includes("X-YTDS-Token")
+    && content.includes("yt-ds-pair")
+    && content.includes("chrome.storage.local");
+  const workerOk = worker.includes("/pair") && worker.includes("yt-ds-pair");
+  const serverOk = server.includes("/pair")
+    && server.includes("loadOrCreateAccessToken")
+    && server.includes("x-ytds-token")
+    && server.includes(".local-token");
+  return contentOk && workerOk && serverOk;
+}
+
+export function whisperCueProved(overlay) {
+  const source = String(overlay?.source || "").trim();
+  const translation = String(overlay?.translation || "").trim();
+  return Number(overlay?.trackCount || 0) === 0 && Boolean(source || translation);
 }
 
 function resolveChromeBin() {
@@ -577,6 +608,23 @@ async function driveExport(run) {
   console.log(`proved export evidence=${path.relative(repoRoot, dir)}`);
 }
 
+function whisperFailedStatus(status) {
+  const text = String(status || "");
+  return text.includes("失败") || text.includes("暂不可用") || text.includes("未能生成");
+}
+
+function writeWhisperAssert(dir, overlay, proved) {
+  writeJson(path.join(dir, "assert.json"), {
+    proved,
+    feature: "whisper",
+    cueTextShown: Boolean(String(overlay?.source || "").trim() || String(overlay?.translation || "").trim()),
+    source: overlay?.source || "",
+    translation: overlay?.translation || "",
+    status: overlay?.status || "",
+    trackCount: overlay?.trackCount ?? null,
+  });
+}
+
 async function driveWhisper(run) {
   const health = await localService();
   if (!health.up) {
@@ -597,18 +645,35 @@ async function driveWhisper(run) {
   }
   const previous = process.env.YTDS_WATCH_URL;
   process.env.YTDS_WATCH_URL = videoUrl;
-  const watch = await openWatch(run, videoUrl);
-  process.env.YTDS_WATCH_URL = previous;
+  let watch;
+  try {
+    watch = await openWatch(run, videoUrl);
+  } finally {
+    if (previous === undefined) delete process.env.YTDS_WATCH_URL;
+    else process.env.YTDS_WATCH_URL = previous;
+  }
   const dir = evidenceDir("whisper");
-  writeJson(path.join(dir, "watch.json"), watch);
-  if (!String(watch.status).includes("语音识别") && watch.trackCount) {
+  const timeoutMs = Number(process.env.YTDS_WHISPER_CUE_TIMEOUT_MS) || 8 * 60 * 1000;
+  const started = Date.now();
+  let last = watch;
+  while (Date.now() - started < timeoutMs) {
+    if (whisperCueProved(last) || Number(last?.trackCount || 0) > 0 || whisperFailedStatus(last?.status)) break;
+    await delay(2000);
+    last = await readOverlay(run);
+  }
+  writeJson(path.join(dir, "watch.json"), last);
+  const proved = whisperCueProved(last);
+  writeWhisperAssert(dir, last, proved);
+  if (!proved) {
     unmet("whisper", {
       feature: "whisper",
-      reason: "video still exposed YouTube caption tracks, so Whisper was not the path taken",
-      watch,
+      reason: Number(last?.trackCount || 0) > 0
+        ? "video still exposed YouTube caption tracks, so Whisper was not the path taken"
+        : "recognition cues were not shown",
+      watch: last,
     });
   }
-  console.log(`whisper watch recorded at ${path.relative(repoRoot, dir)}; cue text still has to be confirmed in watch.json`);
+  console.log(`proved whisper evidence=${path.relative(repoRoot, dir)}`);
 }
 
 function parsePopupSetArgs(argv) {
@@ -663,6 +728,7 @@ async function commandDoctor() {
     "content/renderer.js",
     "content/timeline.js",
     "content/main-world.js",
+    "content/service-worker.js",
     "content/overlay.css",
     "popup/popup.html",
     "popup/popup.js",
@@ -673,8 +739,7 @@ async function commandDoctor() {
     chromeBin
     && ownsProfile
     && popupHeading === "双语字幕助手"
-    && manifest.version === "2.3.0"
-    && manifest.manifest_version === 3
+    && manifestIsDriveable(manifest)
     && missing.length === 0
     && tokenMatch()
   );
@@ -885,7 +950,11 @@ async function main() {
   die(`usage: verify-ytds.mjs launch|doctor|open-watch|popup-set|popup-click|drive|unit|package|cleanup`);
 }
 
-main().catch((error) => {
-  console.error(error.stack || error.message);
-  process.exit(1);
-});
+const invokedDirectly = process.argv[1]
+  && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (invokedDirectly) {
+  main().catch((error) => {
+    console.error(error.stack || error.message);
+    process.exit(1);
+  });
+}

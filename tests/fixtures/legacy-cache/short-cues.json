@@ -1,0 +1,9 @@
+{
+  "lang": "en",
+  "source": "whisper",
+  "segments": [
+    { "text": "short cue one stays readable", "start": 0, "end": 1.6 },
+    { "text": "short cue two follows the first", "start": 1.8, "end": 3.6 },
+    { "text": "short cue three ends the group", "start": 3.8, "end": 6 }
+  ]
+}

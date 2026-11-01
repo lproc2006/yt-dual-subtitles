@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 3,
+  "videoId": "0-Rr2iho6CI",
+  "title": "auto cache fixture",
+  "lang": "zh",
+  "source": "youtube-manual",
+  "requestedLanguage": "auto",
+  "segments": [
+    { "text": "这是自动缓存夹具的第一句。", "start": 0, "end": 2.5 },
+    { "text": "固定语言请求可以复用这段中文。", "start": 2.7, "end": 5.4 },
+    { "text": "真实语言与请求的中文一致。", "start": 5.6, "end": 8.1 },
+    { "text": "时间轴在规范化之后仍然有效。", "start": 8.3, "end": 11 }
+  ]
+}

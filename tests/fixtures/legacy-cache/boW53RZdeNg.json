@@ -1,0 +1,13 @@
+{
+  "videoId": "boW53RZdeNg",
+  "title": "whisper fixture",
+  "lang": "en",
+  "source": "whisper",
+  "segments": [
+    { "text": "local recognition starts with this phrase", "start": 0, "end": 2.6 },
+    { "text": "with this phrase the recognizer continues", "start": 2.2, "end": 5.1 },
+    { "text": "a second spoken sentence stays on the timeline", "start": 5.4, "end": 8.2 },
+    { "text": "the fixture replaces a captionless whisper cache", "start": 8.5, "end": 11.4 },
+    { "text": "each cue has a real start and a later end", "start": 11.6, "end": 14.2 }
+  ]
+}

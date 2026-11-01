@@ -5,10 +5,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadOrCreateAccessToken, pairResponseHeaders } from "./local-token.mjs";
 
 const SERVICE_VERSION = 3;
 const PORT = 8765;
-const ACCESS_TOKEN = "99a56f089a38ced72c3d954927ce6601586c571e6f1e7553";
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_DIR = path.dirname(SCRIPT_DIR);
 const CACHE_DIR = path.join(SCRIPT_DIR, "cache-v3");
@@ -28,6 +28,8 @@ const COOKIE_BROWSER_CANDIDATES = (() => {
 })();
 const PYTHON_CANDIDATES = [process.env.YTDS_PYTHON, "/usr/local/bin/python3", "/opt/homebrew/bin/python3", "/usr/bin/python3"].filter(Boolean);
 const PYTHON = PYTHON_CANDIDATES.find(candidate => fs.existsSync(candidate)) || "python3";
+const TOKEN_FILE = path.join(SCRIPT_DIR, ".local-token");
+const accessToken = loadOrCreateAccessToken(TOKEN_FILE);
 const memoryCache = new Map();
 const inflight = new Map();
 const jobStatus = new Map();
@@ -474,7 +476,7 @@ function json(data, status = 200) {
 }
 
 function authorized(request) {
-  return request.headers.get("x-ytds-token") === ACCESS_TOKEN;
+  return request.headers.get("x-ytds-token") === accessToken;
 }
 
 const server = Bun.serve({
@@ -485,6 +487,13 @@ const server = Bun.serve({
     if (request.method === "OPTIONS") return json({ ok: true });
     const url = new URL(request.url);
     if (url.pathname === "/health") return json({ ok: true, service: "yt-ds-server", version: SERVICE_VERSION });
+    if (url.pathname === "/pair") {
+      const decision = pairResponseHeaders(request.headers.get("origin") || "");
+      const body = decision.status === 200
+        ? { ok: true, token: accessToken }
+        : { ok: false, error: "forbidden" };
+      return new Response(JSON.stringify(body), decision);
+    }
     if (!authorized(request)) return json({ ok: false, error: "unauthorized" }, 401);
 
     if (url.pathname === "/status") {
@@ -512,3 +521,4 @@ const server = Bun.serve({
 
 console.log(`[yt-ds-server] v${SERVICE_VERSION} running at http://127.0.0.1:${server.port}`);
 console.log(`[yt-ds-server] project: ${PROJECT_DIR}`);
+console.log(`[yt-ds-server] pairing token file ready`);

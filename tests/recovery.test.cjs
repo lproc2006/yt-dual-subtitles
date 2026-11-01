@@ -19,10 +19,13 @@ test("固定语言请求可复用相同真实语言的 auto 字幕缓存", () =>
   assert.match(server, /automatic\?\.schemaVersion === SERVICE_VERSION/);
   assert.match(server, /normalizeLanguage\(automatic\.lang\) === requested/);
 
-  const cache = JSON.parse(fs.readFileSync(path.join(root, "server", "cache-v3", "0-Rr2iho6CI__auto.json"), "utf8"));
+  const cache = JSON.parse(fs.readFileSync(path.join(root, "tests", "fixtures", "cache-v3", "0-Rr2iho6CI__auto.json"), "utf8"));
+  assert.equal(cache.schemaVersion, 3);
   assert.equal(cache.lang, "zh");
   assert.equal(cache.source, "youtube-manual");
-  assert.ok(cache.segments.length > 400);
+  assert.equal(cache.requestedLanguage, "auto");
+  assert.ok(cache.segments.length >= 4);
+  assert.ok(cache.segments.every(segment => String(segment.text || "").trim() && Number(segment.end) > Number(segment.start)));
 });
 
 test("字幕轨道损坏时会继续使用 Whisper，而不是直接结束", () => {

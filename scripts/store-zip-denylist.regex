@@ -1,0 +1,1 @@
+cookies-from-browser|ACCESS_TOKEN|LOCAL_TOKEN|remote-components|server/cache|AIza[0-9A-Za-z_-]{20,}|X-YTDS-Token['"]?[[:space:]]*[:=][[:space:]]*['"][0-9a-fA-F]{16,}

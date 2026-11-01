@@ -2,7 +2,10 @@
 release/*.zip
 server/cache/
 server/cache-v3/
+server/.local-token
 server/__pycache__/
 server/*.tmp
 *.log
 *.part
+# Generated verification output. PROOF.md stays tracked.
+.cursor/skills/verify-yt-dual-subtitles/artifacts/
