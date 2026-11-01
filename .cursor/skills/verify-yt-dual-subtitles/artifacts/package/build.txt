@@ -1,0 +1,24 @@
+已生成：/workspace/release/bilingual-subtitle-for-youtube-2.3.0.zip
+文件数量：15
+36K	/workspace/release/bilingual-subtitle-for-youtube-2.3.0.zip
+
+--- unzip -Z1 ---
+manifest.json
+content/
+content/renderer.js
+content/main-world.js
+content/timeline.js
+content/overlay.css
+content/content.js
+icons/
+icons/icon16.png
+icons/icon48.png
+icons/icon128.png
+icons/icon32.png
+popup/
+popup/popup.js
+popup/popup.html
+popup/popup.css
+privacy/
+privacy/privacy.html
+privacy/privacy.css
