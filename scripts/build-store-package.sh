@@ -21,15 +21,17 @@ if print -r -- "${PACKAGE_LIST}" | grep -Eq '(^|/)(server|tests|cache|cache-v3|_
   exit 1
 fi
 
-for required in manifest.json content/content.js content/main-world.js popup/popup.html privacy/privacy.html icons/icon128.png; do
+for required in manifest.json content/content.js content/service-worker.js content/main-world.js popup/popup.html privacy/privacy.html icons/icon128.png; do
   if ! print -r -- "${PACKAGE_LIST}" | grep -Fxq "${required}"; then
     print -u2 "发布包缺少必需文件：${required}"
     exit 1
   fi
 done
 
-if zipgrep -En 'cookies-from-browser|ACCESS_TOKEN|remote-components|server/cache|AIza[0-9A-Za-z_-]{20,}' "${OUTPUT_FILE}" >/dev/null; then
-  print -u2 "发布包中发现 Cookie 读取代码、本地服务源码、远程组件或固定 API 密钥残留"
+TOKEN_LEAK_PATTERN="$(<"${SCRIPT_DIR}/store-zip-denylist.regex")"
+# zipgrep escapes "|" before calling egrep, so alternation in the denylist would never match.
+if unzip -p "${OUTPUT_FILE}" | grep -E -q -a -- "${TOKEN_LEAK_PATTERN}"; then
+  print -u2 "发布包中发现 Cookie 读取代码、固定口令、本地服务源码、远程组件或固定 API 密钥残留"
   exit 1
 fi
 

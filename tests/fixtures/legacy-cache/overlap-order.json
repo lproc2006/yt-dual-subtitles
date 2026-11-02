@@ -1,0 +1,9 @@
+{
+  "lang": "en",
+  "source": "youtube-auto",
+  "segments": [
+    { "text": "second sentence arrives after the first", "start": 4, "end": 7.5 },
+    { "text": "first sentence opens the clip", "start": 0, "end": 3.5 },
+    { "text": "third sentence closes the example", "start": 8, "end": 11 }
+  ]
+}

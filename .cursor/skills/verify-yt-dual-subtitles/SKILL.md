@@ -5,7 +5,7 @@ description: "Drive the unpacked Chrome extension 双语字幕助手 for YouTube
 
 # Verify 双语字幕助手 for YouTube
 
-Primary surface: Manifest V3 unpacked extension `双语字幕助手 for YouTube` (manifest version `2.3.0`) loaded into Google Chrome and driven on `https://www.youtube.com/watch`. The popup is `popup/popup.html`. Secondary surfaces are the local caption service `server/server.mjs` on `127.0.0.1:8765` and the store zip from `scripts/build-store-package.sh`. There is no package.json and no Playwright suite. The harness is `.cursor/skills/verify-yt-dual-subtitles/bin/verify-ytds.mjs`. It talks to system Chrome over the DevTools Protocol. Run every command from the repository root.
+Primary surface: Manifest V3 unpacked extension `双语字幕助手 for YouTube` (version read from `manifest.json`) loaded into Google Chrome and driven on `https://www.youtube.com/watch`. The popup is `popup/popup.html`. Secondary surfaces are the local caption service `server/server.mjs` on `127.0.0.1:8765` and the store zip from `scripts/build-store-package.sh`. There is no package.json and no Playwright suite. The harness is `.cursor/skills/verify-yt-dual-subtitles/bin/verify-ytds.mjs`. It talks to system Chrome over the DevTools Protocol. Run every command from the repository root.
 
 Chrome 156 does not honor `--load-extension` (`DisableLoadExtensionCommandLineSwitch` is not in the binary). Launch uses `Extensions.loadUnpacked` after writing `extensions.ui.developer_mode` into a disposable profile. Do not use `/usr/local/bin/google-chrome`. That wrapper always prepends `--user-data-dir=/home/ubuntu/.config/google-chrome` and `--remote-debugging-port=9222`.
 
@@ -67,9 +67,9 @@ Stdout is one JSON object. `worthDriving` is true only when all of these hold:
 - `run.json` exists, its pid is alive and not a zombie, and `/proc/<pid>/cmdline` contains both `/tmp/ytds-verify/profile` and that debugging port.
 - The debugging port answers `/json/version`.
 - The popup heading is exactly `双语字幕助手`.
-- `manifest.json` is Manifest V3 version `2.3.0`, name `双语字幕助手 for YouTube`.
-- These files exist: `content/content.js`, `content/renderer.js`, `content/timeline.js`, `content/main-world.js`, `content/overlay.css`, `popup/popup.html`, `popup/popup.js`, `icons/icon128.png`.
-- `content/content.js` `LOCAL_TOKEN` equals `server/server.mjs` `ACCESS_TOKEN`. The doctor reports `localTokenMatches` and does not print the token.
+- `manifest.json` is Manifest V3, `name` is `双语字幕助手 for YouTube`, and `version` is the non-empty version read from that file. Doctor does not compare the version to a hardcoded string.
+- These files exist: `content/content.js`, `content/renderer.js`, `content/timeline.js`, `content/main-world.js`, `content/service-worker.js`, `content/overlay.css`, `popup/popup.html`, `popup/popup.js`, `icons/icon128.png`.
+- The extension and local service pair at runtime. The server writes `server/.local-token` on first start. `content/service-worker.js` calls `GET /pair`, and the content script stores the token in `chrome.storage.local` as `ytdsLocalServiceToken`. Later requests send `X-YTDS-Token`. `localTokenMatches` is true only when that handshake is present and no fixed token literal ships in the extension or the server. Doctor does not print the token.
 
 `localServiceUp` is informational. A down service still leaves the extension worth driving. It blocks only `drive whisper`. Doctor does not click, navigate, or kill processes.
 
@@ -133,14 +133,14 @@ node .cursor/skills/verify-yt-dual-subtitles/bin/verify-ytds.mjs drive whisper
 
 `drive style-cache` is the journey that sets 影院/100%/无, then 简洁/140%/实心, then clears the local translation cache, and writes evidence. Exit `0` only when the overlay, `chrome.storage.sync`, the clear-cache status, and an empty `chrome.storage.local` all match. Exit `2` from the other drives means an unmet precondition (bot wall, no caption file, local service down). That is not a pass. Do not weaken the expected cue text or the downloaded Markdown to make them pass.
 
-Fast unit gate, from a clean checkout. Exit status is the test runner's status. On a checkout without the gitignored caches, 13 tests pass and 3 fail with `ENOENT` for `server/cache` and `server/cache-v3` (see Evidence). Do not treat those three as a regression in the extension until those fixtures are actually present.
+Fast unit gate, from a clean checkout. Exit status is the test runner's status. `server/cache/` and `server/cache-v3/` stay gitignored. Tests that need caption JSON read `tests/fixtures/` instead, so `node --test` passes without those caches.
 
 ```sh
 node --test tests/*.test.cjs
 node .cursor/skills/verify-yt-dual-subtitles/bin/verify-ytds.mjs unit
 ```
 
-Store package gate. Requires `/usr/bin/zsh` because `scripts/build-store-package.sh` uses zsh parameter expansion. The script writes `release/bilingual-subtitle-for-youtube-2.3.0.zip` and fails if the zip contains `server/`, `tests/`, caches, or a cookie/token marker, or if it lacks `manifest.json`, `content/content.js`, `content/main-world.js`, `popup/popup.html`, `privacy/privacy.html`, or `icons/icon128.png`.
+Store package gate. Requires `/usr/bin/zsh` because `scripts/build-store-package.sh` uses zsh parameter expansion. The script reads the version from `manifest.json` and writes `release/bilingual-subtitle-for-youtube-<version>.zip`. It fails if the zip contains `server/`, `tests/`, caches, `LOCAL_TOKEN`, `ACCESS_TOKEN`, a fixed `X-YTDS-Token` hex literal, or another cookie/token marker, or if it lacks `manifest.json`, `content/content.js`, `content/service-worker.js`, `content/main-world.js`, `popup/popup.html`, `privacy/privacy.html`, or `icons/icon128.png`.
 
 ```sh
 zsh scripts/build-store-package.sh
@@ -149,7 +149,7 @@ node .cursor/skills/verify-yt-dual-subtitles/bin/verify-ytds.mjs package
 
 ## Evidence
 
-Proof artifacts live under `.cursor/skills/verify-yt-dual-subtitles/artifacts/<feature>/`. Cleanup never deletes that directory.
+Proof artifacts are written under `.cursor/skills/verify-yt-dual-subtitles/artifacts/<feature>/` when a drive runs. That directory is gitignored. Cleanup does not delete it on disk. A clean checkout does not contain it, and the files are not required in git. `PROOF.md` is the checked-in summary. Screenshots and accessibility dumps are local evidence only.
 
 `drive style-cache` writes:
 
@@ -167,7 +167,7 @@ A pass requires the user action and the resulting state: the overlay dataset, th
 
 `drive export` passes only when `#status` contains `已导出` and a downloaded `.md` file starts with `# `. Otherwise it writes `artifacts/export/unmet.json`. The real toolbar download is a blob save named from the video title plus `中英对照`, `译文`, or `原文`.
 
-`drive whisper` passes the health check only as a precondition. It does not pass the feature. Without `YTDS_WHISPER_VIDEO_URL` pointing at a video that has no YouTube captions, it writes `artifacts/whisper/unmet.json`.
+`drive whisper` exits `0` only when recognition cue text is visible (`.yt-ds-source` or `.yt-ds-translation` is non-empty), `trackCount` is `0`, and `artifacts/whisper/assert.json` has `proved: true`. `/health`, `YTDS_WHISPER_VIDEO_URL`, and a status string that only contains `语音识别` are not a pass. If the service is down, the URL is unset, YouTube caption tracks are still present, or no cue appears before the wait ends, the command exits `2` and writes `artifacts/whisper/unmet.json`. The wait is 8 minutes unless `YTDS_WHISPER_CUE_TIMEOUT_MS` is set.
 
 `unit` writes `artifacts/unit/node-test.txt`. `package` writes `artifacts/package/build.txt` (script stdout plus `unzip -Z1`).
 
@@ -181,7 +181,7 @@ The first proving run's report is `PROOF.md` next to this file. Read it before t
 node .cursor/skills/verify-yt-dual-subtitles/bin/verify-ytds.mjs cleanup
 ```
 
-This SIGTERMs the pid in `run.json` (the process group, then the pid), SIGKILLs it if it is still alive after 5 seconds, and deletes `/tmp/ytds-verify/profile`, `/tmp/ytds-verify/downloads`, `/tmp/ytds-verify/run.json`, and `/tmp/ytds-verify/chrome.log`. It deletes the profile only when the path is under `/tmp/ytds-verify/`. It does not kill Chrome by name, does not touch `/home/ubuntu/.config/google-chrome`, does not stop whatever is on port `8765` (this helper never starts it), and does not delete `.cursor/skills/verify-yt-dual-subtitles/artifacts/`. After cleanup, `doctor` exits `1` because no instance is running. The artifacts must still be there.
+This SIGTERMs the pid in `run.json` (the process group, then the pid), SIGKILLs it if it is still alive after 5 seconds, and deletes `/tmp/ytds-verify/profile`, `/tmp/ytds-verify/downloads`, `/tmp/ytds-verify/run.json`, and `/tmp/ytds-verify/chrome.log`. It deletes the profile only when the path is under `/tmp/ytds-verify/`. It does not kill Chrome by name, does not touch `/home/ubuntu/.config/google-chrome`, does not stop whatever is on port `8765` (this helper never starts it), and does not delete `.cursor/skills/verify-yt-dual-subtitles/artifacts/`. After cleanup, `doctor` exits `1` because no instance is running. Local artifact files, if a drive already wrote them, remain on disk. They are gitignored and are not required in the checkout.
 
 Run cleanup after every failed launch or drive so the next launch is not blocked by a leftover pid or profile.
 

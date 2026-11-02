@@ -1,0 +1,9 @@
+{
+  "lang": "en",
+  "source": "youtube-auto",
+  "segments": [
+    { "text": "we are building a reliable subtitle", "start": 0, "end": 3.4 },
+    { "text": "a reliable subtitle system for everyone", "start": 2.8, "end": 6.2 },
+    { "text": "everyone can read the second line clearly", "start": 6.4, "end": 9.5 }
+  ]
+}

@@ -62,23 +62,26 @@ test("固定方向找不到预期源语言时仍保留现有字幕", () => {
   assert.equal(core.selectCaptionTrack([traditionalChinese, englishAutomatic], "zh-CN"), englishAutomatic);
 });
 
-test("现有全部源字幕缓存规范化后均生成有效时间轴", () => {
-  const cacheDir = path.join(__dirname, "..", "server", "cache");
+test("夹具源字幕缓存规范化后均生成有效时间轴", () => {
+  const cacheDir = path.join(__dirname, "fixtures", "legacy-cache");
   const files = fs.readdirSync(cacheDir).filter(file => file.endsWith(".json"));
-  assert.ok(files.length >= 20);
+  assert.ok(files.length >= 4);
   for (const file of files) {
     const data = JSON.parse(fs.readFileSync(path.join(cacheDir, file), "utf8"));
     const normalized = core.normalizeSegments(data.segments, data.lang);
     const result = core.validateTimeline(normalized);
     assert.equal(result.ok, true, `${file}: ${result.errors.slice(0, 5).join(",")}`);
+    assert.ok(normalized.length >= 2, file);
   }
 });
 
-test("无 YouTube 字幕的视频可从 Whisper 缓存恢复", () => {
-  const cacheFile = path.join(__dirname, "..", "server", "cache", "boW53RZdeNg.json");
+test("无 YouTube 字幕的视频可从 Whisper 夹具恢复", () => {
+  const cacheFile = path.join(__dirname, "fixtures", "legacy-cache", "boW53RZdeNg.json");
   const data = JSON.parse(fs.readFileSync(cacheFile, "utf8"));
   assert.equal(data.source, "whisper");
-  assert.ok(data.segments.length > 1000);
+  assert.equal(data.videoId, "boW53RZdeNg");
+  assert.ok(data.segments.length >= 4);
   const normalized = core.normalizeSegments(data.segments, data.lang);
   assert.equal(core.validateTimeline(normalized).ok, true);
+  assert.ok(normalized.some(cue => cue.text.includes("local recognition")));
 });

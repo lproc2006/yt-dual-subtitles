@@ -10,6 +10,9 @@
     "https://translate.googleapis.com/*",
     "http://127.0.0.1:8765/*"
   ],
+  "background": {
+    "service_worker": "content/service-worker.js"
+  },
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],

@@ -10,9 +10,13 @@ This run executed the skill's own commands against unpacked `双语字幕助手 
 ready extension=mfcnnpgffdelhlegadfaiedfiklhjacl port=9344 profile=/tmp/ytds-verify/profile popup=双语字幕助手 browser=Chrome/156.0.8078.47
 ```
 
-`doctor` reported `worthDriving: true`, manifest `2.3.0`, `localTokenMatches: true`, and `localServiceUp: false`.
+`doctor` reported `worthDriving: true`, the version read from `manifest.json` (`2.3.0` on this run), `localTokenMatches: true`, and `localServiceUp: false`. Doctor now requires Manifest V3 and that version field. It does not compare the version to a hardcoded string.
 
-`drive style-cache` exited `0`. `artifacts/style-cache/assert.json` has `proved: true`.
+`drive style-cache` exited `0`. The local `artifacts/style-cache/assert.json` had `proved: true`. Large screenshots and accessibility dumps from that run are no longer in git. This file is the checked-in summary:
+
+```json
+{ "proved": true, "feature": "style-cache", "captionTextShown": false, "failures": [] }
+```
 
 - Baseline popup and overlay: 影院模式, `data-bg=none`, `--font-scale=1.00`, label `100%`.
 - After the change: 简洁模式, `data-bg=solid`, `--font-scale=1.40`, label `140%`.
@@ -29,9 +33,9 @@ ready extension=mfcnnpgffdelhlegadfaiedfiklhjacl port=9344 profile=/tmp/ytds-ver
 
 `drive export` exited `2`. With no cues loaded, `#status` became `✗ 无字幕可导出` and no Markdown file was downloaded. See `artifacts/export/unmet.json`.
 
-`drive whisper` exited `2`. `http://127.0.0.1:8765/health` did not answer. Bun, yt-dlp, and Whisper were not started. See `artifacts/whisper/unmet.json`.
+`drive whisper` exited `2`. `http://127.0.0.1:8765/health` did not answer. Bun, yt-dlp, and Whisper were not started. See `artifacts/whisper/unmet.json`. A healthy service and a watch URL are not a pass by themselves. `drive whisper` exits `0` only when recognition cue text is visible and `assert.json` has `proved: true`.
 
-`node --test tests/*.test.cjs` exited `1`: 13 passed, 3 failed with `ENOENT` because `server/cache/` and `server/cache-v3/` are gitignored and absent. The failing tests are `固定语言请求可复用相同真实语言的 auto 字幕缓存`, `现有全部源字幕缓存规范化后均生成有效时间轴`, and `无 YouTube 字幕的视频可从 Whisper 缓存恢复`. Output is `artifacts/unit/node-test.txt`.
+`node --test tests/*.test.cjs` previously exited `1` on a clean tree: 13 passed, 3 failed with `ENOENT` because `server/cache/` and `server/cache-v3/` were gitignored and absent. Those tests now read checked-in fixtures under `tests/fixtures/`. A clean checkout must exit `0`. A missing cache directory is not an accepted failure.
 
 ## What this environment did that a normal desktop run still has to cover
 
